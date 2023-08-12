@@ -1,0 +1,47 @@
+import smbus
+from time import sleep
+
+channel = 1
+address = 0x3E
+
+bus = smbus.SMBus(channel)
+
+data = [2,1,1,1,1]
+
+def trinaryToByte(trinary_digits):
+	result = 0
+	
+	for i in range(len(trinary_digits)):
+		result = (result*3) + trinary_digits[i]
+		
+	return result
+
+while True:
+	byte_data = trinaryToByte(data)
+	i = byte_data
+	
+	sleep(1)
+	try:
+		print ("Writing data "+str(byte_data))
+		# Write out I2C command: address, cmd, msg[0]
+		# bus.write_i2c_block_data(address, i&0xff, [i>>8])
+		bus.write_i2c_block_data(address, 0, [byte_data])
+	except Exception as e:
+		print ("Writing Error "+str(e))
+		continue
+		
+	#sleep (0.1)
+	read = 0
+	while read == 0:
+		try:
+			print ("Reading data")
+			rx_bytes = bus.read_i2c_block_data(address, 0, 2)
+			# print(type(rx_bytes))
+		except Exception as e:
+			print ("Read Error "+str(e))
+			continue
+		read = 1
+		print ("Read "+str(rx_bytes))
+		value = rx_bytes[0] + (rx_bytes[1] << 8)
+		print ("Read value "+str(value))
+	
